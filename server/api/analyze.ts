@@ -102,7 +102,7 @@ export default defineEventHandler(async (event) => {
       .slice(0, 5)
       .map(([lang]) => lang);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `
       Write a fun, engaging, and slightly playful analysis of this GitHub user's profile in a novel-like narrative style. 
@@ -143,7 +143,7 @@ export default defineEventHandler(async (event) => {
       12. (IMPORTANT) Keep the language easy to read, simple good wording but not too simple to look like some 5 years old wrote.
       13. Try to be unique for each user.
 
-      Dont always start from "So, you won't BELIEVE who I stumbled upon on GitHub", try different ones.  
+      Dont always start from "So, you won't BELIEVE (especially this word in CAPITAL ones) who I stumbled upon on GitHub", try different ones.  
 
       Make it feel like a story that's fun to read while being insightful and encouraging.
     `;
