@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl mx-auto">
       <div class="bg-white shadow-lg rounded-lg p-6">
-        <h1 class="text-3xl font-bold text-center mb-8">GitHub Profile Analyzer</h1>
+        <h1 class="text-3xl font-bold text-center mb-8">GitHub Story Generator</h1>
         
         <!-- Search Form -->
         <div class="mb-8">
@@ -19,7 +19,7 @@
               :disabled="loading"
               class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              {{ loading ? 'Analyzing...' : 'Analyze' }}
+              {{ loading ? 'Writing story...' : 'Tell me their story' }}
             </button>
           </div>
         </div>
@@ -30,46 +30,46 @@
         </div>
 
         <!-- Results -->
-        <div v-if="analysis" class="space-y-6">
+        <div v-if="analysis" class="space-y-8">
           <!-- Profile Info -->
           <div v-if="userData" class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
             <img
               :src="userData.profile.avatar_url"
               :alt="userData.profile.login"
-              class="w-16 h-16 rounded-full"
+              class="w-20 h-20 rounded-full"
             />
             <div>
-              <h2 class="text-xl font-semibold">{{ userData.profile.name || userData.profile.login }}</h2>
+              <h2 class="text-2xl font-semibold">{{ userData.profile.name || userData.profile.login }}</h2>
               <p class="text-gray-600">{{ userData.profile.bio || 'No bio provided' }}</p>
+              <p class="text-sm text-gray-500 mt-1">
+                {{ userData.profile.location || 'Location unknown' }} · Joined {{ new Date(userData.profile.created_at).toLocaleDateString() }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div v-if="userData?.stats" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="p-4 bg-blue-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-blue-600">{{ userData.stats.totalStars }}</div>
+              <div class="text-sm text-gray-600">Total Stars</div>
+            </div>
+            <div class="p-4 bg-green-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-green-600">{{ userData.stats.totalForks }}</div>
+              <div class="text-sm text-gray-600">Total Forks</div>
+            </div>
+            <div class="p-4 bg-purple-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-purple-600">{{ userData.profile.public_repos }}</div>
+              <div class="text-sm text-gray-600">Repositories</div>
+            </div>
+            <div class="p-4 bg-pink-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-pink-600">{{ userData.profile.followers }}</div>
+              <div class="text-sm text-gray-600">Followers</div>
             </div>
           </div>
 
           <!-- AI Analysis -->
-          <div class="prose max-w-none">
-            <div class="whitespace-pre-wrap">{{ analysis }}</div>
-          </div>
-
-          <!-- Repository List -->
-          <div v-if="userData?.repos.length" class="mt-8">
-            <h3 class="text-xl font-semibold mb-4">Top Repositories</h3>
-            <div class="space-y-4">
-              <div
-                v-for="repo in userData.repos"
-                :key="repo.id"
-                class="p-4 border rounded-lg hover:bg-gray-50"
-              >
-                <a
-                  :href="repo.html_url"
-                  target="_blank"
-                  class="text-blue-600 hover:underline font-medium"
-                >
-                  {{ repo.name }}
-                </a>
-                <p class="text-gray-600 text-sm mt-1">
-                  {{ repo.description || 'No description provided' }}
-                </p>
-              </div>
-            </div>
+          <div class="prose prose-lg max-w-none">
+            <div class="text-gray-800 leading-relaxed space-y-4">{{ analysis }}</div>
           </div>
         </div>
       </div>
@@ -101,7 +101,7 @@ async function analyzeProfile() {
     const response = await $fetch(`/api/analyze?username=${encodeURIComponent(username.value)}`);
     userData.value = {
       profile: response.profile,
-      repos: response.repos
+      stats: response.stats
     };
     analysis.value = response.analysis;
   } catch (e: any) {
