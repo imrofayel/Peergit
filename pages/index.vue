@@ -31,7 +31,7 @@
         </div>
 
         <!-- Results -->
-        <div v-if="analysis" class="space-y-8 mt-6">
+        <div v-if="analysis" class="flex flex-col gap-y-8 m-6">
           <!-- Profile Info -->
           <div v-if="userData" class="flex items-center justify-center gap-4 p-4 rounded-lg">
             <img
@@ -67,7 +67,7 @@
 
           <!-- AI Analysis -->
           <div class="prose prose-lg max-w-none">
-            <div class="drop-shadow-xs leading-relaxed text-lg space-y-4">{{ analysis }}</div>
+            <div class="flex flex-col drop-shadow-xs leading-relaxed text-lg gap-y-4">{{ analysis }}</div>
           </div>
         </div>
       </div>
