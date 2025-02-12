@@ -1,38 +1,39 @@
 <template>
-  <div class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-3xl mx-auto">
-      <div class="bg-white shadow-lg rounded-lg p-6">
-        <h1 class="text-3xl font-bold text-center mb-8">GitHub Story Generator</h1>
-        
+    <div class="pb-10">
+
+      <SiteHero/>
+
+      <div>        
         <!-- Search Form -->
-        <div class="mb-8">
-          <div class="flex gap-4">
+          <div class="flex gap-3 justify-center mt-3 items-center">
             <input
               v-model="username"
               type="text"
-              placeholder="Enter GitHub username"
-              class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="GitHub username"
+              class="inline-flex items-center justify-center text-lg ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-0 p-3 py-2.5 rounded-2xl disabled:pointer-events-none disabled:opacity-50 shadow-xs gap-1 border border-neutral-200 placeholder:drop-shadow-xs bg-white hover:bg-neutral-50"
               @keyup.enter="analyzeProfile"
             />
-            <button
+            <UiButton
               @click="analyzeProfile"
-              :disabled="loading"
-              class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              variant="outline"
+              class="cursor-pointer rounded-2xl text-lg h-12"
+              v-if="!loading"
             >
-              {{ loading ? 'Writing story...' : 'Tell me their story' }}
-            </button>
+              {{ loading ? 'Thinking' : 'Think!' }}
+            </UiButton>
+
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" v-if="loading"><g stroke="currentColor"><circle cx="12" cy="12" r="9.5" fill="none" stroke-linecap="round" stroke-width="2.5"><animate attributeName="stroke-dasharray" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0 150;42 150;42 150;42 150"/><animate attributeName="stroke-dashoffset" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0;-16;-59;-59"/></circle><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></g></svg>
           </div>
-        </div>
 
         <!-- Error Message -->
-        <div v-if="error" class="mb-6 p-4 bg-red-100 text-red-700 rounded-lg">
+        <div v-if="error" class="m-6 p-4 bg-red-50 text-red-600 rounded-2xl">
           {{ error }}
         </div>
 
         <!-- Results -->
-        <div v-if="analysis" class="space-y-8">
+        <div v-if="analysis" class="space-y-8 mt-6">
           <!-- Profile Info -->
-          <div v-if="userData" class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+          <div v-if="userData" class="flex items-center justify-center gap-4 p-4 rounded-lg">
             <img
               :src="userData.profile.avatar_url"
               :alt="userData.profile.login"
@@ -40,51 +41,47 @@
             />
             <div>
               <h2 class="text-2xl font-semibold">{{ userData.profile.name || userData.profile.login }}</h2>
-              <p class="text-gray-600">{{ userData.profile.bio || 'No bio provided' }}</p>
-              <p class="text-sm text-gray-500 mt-1">
-                {{ userData.profile.location || 'Location unknown' }} · Joined {{ new Date(userData.profile.created_at).toLocaleDateString() }}
-              </p>
+              <p class="text-lg">{{ userData.profile.bio || 'No bio provided' }}</p>
             </div>
           </div>
 
           <!-- Quick Stats -->
           <div v-if="userData?.stats" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="p-4 bg-blue-50 rounded-lg text-center">
-              <div class="text-2xl font-bold text-blue-600">{{ userData.stats.totalStars }}</div>
-              <div class="text-sm text-gray-600">Total Stars</div>
+            <div class="p-4 bg-blue-50/50 rounded-lg text-center border border-blue-100">
+              <div class="text-3xl font-bold text-blue-500">{{ userData.stats.totalStars }}</div>
+              <div class="text-base font-medium">Total Stars</div>
             </div>
-            <div class="p-4 bg-green-50 rounded-lg text-center">
-              <div class="text-2xl font-bold text-green-600">{{ userData.stats.totalForks }}</div>
-              <div class="text-sm text-gray-600">Total Forks</div>
+            <div class="p-4 bg-green-50/50 rounded-lg text-center border border-green-100">
+              <div class="text-3xl font-bold text-green-500">{{ userData.stats.totalForks }}</div>
+              <div class="text-base font-medium">Total Forks</div>
             </div>
-            <div class="p-4 bg-purple-50 rounded-lg text-center">
-              <div class="text-2xl font-bold text-purple-600">{{ userData.profile.public_repos }}</div>
-              <div class="text-sm text-gray-600">Repositories</div>
+            <div class="p-4 bg-indigo-50/50 rounded-lg text-center border-indigo-100 border">
+              <div class="text-3xl font-bold text-indigo-500">{{ userData.profile.public_repos }}</div>
+              <div class="text-base font-medium">Repositories</div>
             </div>
-            <div class="p-4 bg-pink-50 rounded-lg text-center">
-              <div class="text-2xl font-bold text-pink-600">{{ userData.profile.followers }}</div>
-              <div class="text-sm text-gray-600">Followers</div>
+            <div class="p-4 bg-pink-50/50 rounded-lg text-center border-red-100 border">
+              <div class="text-3xl font-bold text-red-500">{{ userData.profile.followers }}</div>
+              <div class="text-base font-medium">Followers</div>
             </div>
           </div>
 
           <!-- AI Analysis -->
           <div class="prose prose-lg max-w-none">
-            <div class="text-gray-800 leading-relaxed space-y-4">{{ analysis }}</div>
+            <div class="drop-shadow-xs leading-relaxed text-lg space-y-4">{{ analysis }}</div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, watchEffect } from 'vue';
 
 const username = ref('');
 const loading = ref(false);
 const error = ref('');
-const analysis = ref('');
-const userData = ref<any>(null);
+const analysis = ref(localStorage.getItem('analysis') || '');
+const userData = ref<any>(JSON.parse(localStorage.getItem('userData') || 'null'));
 
 async function analyzeProfile() {
   if (!username.value.trim()) {
@@ -94,20 +91,28 @@ async function analyzeProfile() {
 
   loading.value = true;
   error.value = '';
-  analysis.value = '';
-  userData.value = null;
 
   try {
     const response = await $fetch(`/api/analyze?username=${encodeURIComponent(username.value)}`);
+    
     userData.value = {
       profile: response.profile,
       stats: response.stats
     };
     analysis.value = response.analysis;
+
+    // Save data to localStorage to persist on refresh
+    localStorage.setItem('userData', JSON.stringify(userData.value));
+    localStorage.setItem('analysis', analysis.value);
   } catch (e: any) {
     error.value = e.data?.message || 'An error occurred while analyzing the profile';
   } finally {
     loading.value = false;
   }
 }
+
+// Clear input and reload data on refresh
+watchEffect(() => {
+  username.value = '';
+});
 </script>

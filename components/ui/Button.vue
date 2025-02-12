@@ -8,11 +8,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // TODO::COLOR
-        default: 'bg-[#3951ca] text-white hover:bg-[#3856eb]',
+        default: 'bg-[#1976D2] text-white hover:bg-[#1E88E5]',
         destructive:
           'bg-red-500 text-white hover:bg-red-700',
         outline:
-          'border border-neutral-200 bg-white hover:bg-neutral-50',
+          'border border-neutral-200 hover:bg-white bg-neutral-50',
         secondary:
           'bg-neutral-100 hover:bg-neutral-200/50',
         ghost: 'hover:bg-neutral-100 shadow-none',
