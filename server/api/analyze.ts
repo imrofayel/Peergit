@@ -55,6 +55,11 @@ export default defineEventHandler(async (event) => {
       type: 'owner'
     });
 
+    const { data: userReadme } = await octokit.rest.repos.getReadme({
+      owner: username,
+      repo: username,
+    });
+
     // Type assertion for the responses
     const typedProfile = profile as GithubProfile;
     const typedRepos = repos as GithubRepo[];
@@ -102,7 +107,7 @@ export default defineEventHandler(async (event) => {
       .slice(0, 5)
       .map(([lang]) => lang);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       Write a fun, engaging, and slightly playful analysis of this GitHub user's profile in a novel-like narrative style. 
@@ -114,6 +119,7 @@ export default defineEventHandler(async (event) => {
       Profile:
       - Name: ${typedProfile.name || typedProfile.login}
       - Bio: ${typedProfile.bio || 'No bio provided'}
+      - User Readme: ${userReadme?.content || 'No readme provided'}
       - Public Repos: ${typedProfile.public_repos}
       - Followers: ${typedProfile.followers}
       - Following: ${typedProfile.following}
@@ -132,18 +138,17 @@ export default defineEventHandler(async (event) => {
       2. Weave in observations about their evolution as a developer
       3. Make educated guesses about their personality and working style based on their repos and activity
       4. Include some playful observations about their language preferences and coding patterns
-      5. Suggest potential future directions or hidden talents you spot..
+      5. Suggest potential future directions or hidden talents you spot.
       6. End with an encouraging and friendly note
       7. Keep the tone casual and fun, like a friend telling a story
       8. Feel free to make reasonable assumptions about their coding journey and interests
       9. (IMPORTANT) Include some light-hearted jokes or observations where appropriate. (must after every two lines).
       10. Write in paragraphs, not bullet points or markdown
-      11. Dont just keep making the person greatest of all time but also pinpoint what he is missing (if needed) and how he
-      can improve, and just be a casual funny mentor.
+      11. Also pinpoint what he is missing (if needed) and how he can improve, and just be a casual funny mentor.
       12. (IMPORTANT) Keep the language easy to read, simple good wording but not too simple to look like some 5 years old wrote.
       13. Try to be unique for each user.
 
-      Dont always start from "So, you won't BELIEVE (especially this word in CAPITAL ones) who I stumbled upon on GitHub", try different ones.  
+      Dont always start from "So, you won't BELIEVE (especially this word in CAPITAL ones) who I stumbled upon on GitHub", try different wording.  
 
       Make it feel like a story that's fun to read while being insightful and encouraging.
     `;
