@@ -31,42 +31,49 @@ export default defineEventHandler(async (event) => {
   if (!username) {
     throw createError({
       statusCode: 400,
-      message: 'Username is required'
+      message: 'Username is required',
     });
   }
 
   const octokit = new Octokit({
-    auth: config.public.githubToken
+    auth: config.public.githubToken,
   });
 
   const genAI = new GoogleGenerativeAI(config.public.geminiApiKey);
 
   try {
     // Fetch user profile
-    const { data: profile } = await octokit.rest.users.getByUsername({
-      username,
-    });
+    const profileResponse = await octokit.rest.users.getByUsername({ username }).catch(() => null);
+    if (!profileResponse) {
+      throw createError({ statusCode: 404, message: 'GitHub user not found' });
+    }
+    const profile = profileResponse.data as GithubProfile;
 
-    // Fetch all repositories
-    const { data: repos } = await octokit.rest.repos.listForUser({
+    // Fetch repositories
+    const reposResponse = await octokit.rest.repos.listForUser({
       username,
       sort: 'updated',
       per_page: 100,
-      type: 'owner'
-    });
+      type: 'owner',
+    }).catch(() => ({ data: [] }));
 
-    const { data: userReadme } = await octokit.rest.repos.getReadme({
-      owner: username,
-      repo: username,
-    });
+    const repos = reposResponse.data as GithubRepo[];
 
-    // Type assertion for the responses
-    const typedProfile = profile as GithubProfile;
-    const typedRepos = repos as GithubRepo[];
+    // Attempt to fetch README (Handle if not found)
+    let userReadme = 'No README provided';
+    try {
+      const readmeResponse = await octokit.rest.repos.getReadme({
+        owner: username,
+        repo: username,
+      });
+      userReadme = Buffer.from(readmeResponse.data.content, 'base64').toString();
+    } catch (error) {
+      console.warn('README not found, continuing without it.');
+    }
 
-    // Fetch languages for each repo
+    // Fetch repo languages safely
     const repoLanguages = await Promise.all(
-      typedRepos.map(async (repo) => {
+      repos.map(async (repo) => {
         try {
           const { data } = await octokit.rest.repos.listLanguages({
             owner: username,
@@ -81,91 +88,105 @@ export default defineEventHandler(async (event) => {
 
     // Calculate total stats
     const stats = {
-      totalStars: typedRepos.reduce((sum, repo) => sum + (repo.stargazers_count || 0), 0),
-      totalForks: typedRepos.reduce((sum, repo) => sum + (repo.forks_count || 0), 0),
-      totalWatchers: typedRepos.reduce((sum, repo) => sum + (repo.watchers_count || 0), 0),
+      totalStars: repos.reduce((sum, repo) => sum + (repo.stargazers_count || 0), 0),
+      totalForks: repos.reduce((sum, repo) => sum + (repo.forks_count || 0), 0),
+      totalWatchers: repos.reduce((sum, repo) => sum + (repo.watchers_count || 0), 0),
       languages: repoLanguages.reduce((acc, langs) => {
         Object.entries(langs).forEach(([lang, bytes]) => {
           acc[lang] = (acc[lang] || 0) + (bytes as number);
         });
         return acc;
       }, {} as Record<string, number>),
-      mostStarredRepo: typedRepos.reduce((max, repo) => 
+      mostStarredRepo: repos.length > 0 ? repos.reduce((max, repo) =>
         (repo.stargazers_count || 0) > (max?.stargazers_count || 0) ? repo : max
-      , typedRepos[0]),
-      oldestRepo: typedRepos.reduce((oldest, repo) =>
+      , repos[0]) : null,
+      oldestRepo: repos.length > 0 ? repos.reduce((oldest, repo) =>
         new Date(repo.created_at) < new Date(oldest.created_at) ? repo : oldest
-      , typedRepos[0]),
-      newestRepo: typedRepos.reduce((newest, repo) =>
+      , repos[0]) : null,
+      newestRepo: repos.length > 0 ? repos.reduce((newest, repo) =>
         new Date(repo.created_at) > new Date(newest.created_at) ? repo : newest
-      , typedRepos[0])
+      , repos[0]) : null
     };
 
-    // Sort languages by usage
+    // Sort top languages
     const topLanguages = Object.entries(stats.languages)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([lang]) => lang);
 
+    // Handle cases where repos are empty
+    const mostStarredRepoInfo = stats.mostStarredRepo
+      ? `${stats.mostStarredRepo.name} (${stats.mostStarredRepo.stargazers_count} stars)`
+      : 'No repositories found';
+
+    const oldestRepoInfo = stats.oldestRepo
+      ? `${stats.oldestRepo.name} (${new Date(stats.oldestRepo.created_at).toLocaleDateString()})`
+      : 'No repositories found';
+
+    const newestRepoInfo = stats.newestRepo
+      ? `${stats.newestRepo.name} (${new Date(stats.newestRepo.created_at).toLocaleDateString()})`
+      : 'No repositories found';
+
+    // Prepare AI model prompt
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `
-      Write a fun, engaging, and slightly playful analysis of this GitHub user's profile in a novel-like narrative style. 
-      Include some light-hearted observations and friendly roasting where appropriate (but must do). Make it feel like a friend telling 
-      another friend about someone interesting they discovered.
+    const prompt =` 
+    Write a fun, engaging, and slightly playful analysis of this GitHub user's profile in a novel-like narrative style. 
+    Include some light-hearted observations and friendly roasting where appropriate (but must do). Make it feel like a friend telling 
+    another friend about someone interesting they discovered.
 
-      Here's the user's data (but don't list these facts directly, weave them naturally into the story):
+    Here's the user's data (but don't list these facts directly, weave them naturally into the story):
 
-      Profile:
-      - Name: ${typedProfile.name || typedProfile.login}
-      - Bio: ${typedProfile.bio || 'No bio provided'}
-      - User Readme: ${userReadme?.content || 'No readme provided'}
-      - Public Repos: ${typedProfile.public_repos}
-      - Followers: ${typedProfile.followers}
-      - Following: ${typedProfile.following}
-      - Account created: ${new Date(typedProfile.created_at).toLocaleDateString()}
-      
+    Profile:
+      - Name: ${profile.name || profile.login}
+      - Bio: ${profile.bio || 'No bio provided'}
+      - User Readme: ${userReadme}
+      - Public Repos: ${profile.public_repos}
+      - Followers: ${profile.followers}
+      - Following: ${profile.following}
+      - Account created: ${new Date(profile.created_at).toLocaleDateString()}
+
       Stats:
       - Total Stars: ${stats.totalStars}
       - Total Forks: ${stats.totalForks}
-      - Top Languages: ${topLanguages.join(', ')}
-      - Most Starred Repo: ${stats.mostStarredRepo.name} (${stats.mostStarredRepo.stargazers_count} stars)
-      - First Repo: ${stats.oldestRepo.name} (${new Date(stats.oldestRepo.created_at).toLocaleDateString()})
-      - Latest Repo: ${stats.newestRepo.name} (${new Date(stats.newestRepo.created_at).toLocaleDateString()})
+      - Top Languages: ${topLanguages.join(', ') || 'No major languages detected'}
+      - Most Starred Repo: ${mostStarredRepoInfo}
+      - First Repo: ${oldestRepoInfo}
+      - Latest Repo: ${newestRepoInfo}
 
-      Guidelines for the narrative:
-      1. Start with an engaging hook about their coding journey
-      2. Weave in observations about their evolution as a developer
-      3. Make educated guesses about their personality and working style based on their repos and activity
-      4. Include some playful observations about their language preferences and coding patterns
-      5. Suggest potential future directions or hidden talents you spot.
-      6. End with an encouraging and friendly note
-      7. Keep the tone casual and fun, like a friend telling a story
-      8. Feel free to make reasonable assumptions about their coding journey and interests
-      9. (IMPORTANT) Include some light-hearted jokes or observations where appropriate. (must after every two lines).
-      10. Write in paragraphs, not bullet points or markdown
-      11. Also pinpoint what he is missing (if needed) and how he can improve, and just be a casual funny mentor.
-      12. (IMPORTANT) Keep the language easy to read, simple good wording but not too simple to look like some 5 years old wrote.
-      13. Try to be unique for each user.
+    Guidelines for the narrative:
+    1. Start with an engaging hook about their coding journey
+    2. Weave in observations about their evolution as a developer
+    3. Make educated guesses about their personality and working style based on their repos and activity
+    4. Include some playful observations about their language preferences and coding patterns
+    5. Suggest potential future directions or hidden talents you spot.
+    6. End with an encouraging and friendly note
+    7. Keep the tone casual and fun, like a friend telling a story
+    8. Feel free to make reasonable assumptions about their coding journey and interests
+    9. (IMPORTANT) Include some light-hearted jokes or observations where appropriate. (must after every two lines like often crack really good jokes throughout the story please please).
+    10. Write in paragraphs, not bullet points or markdown
+    11. Also pinpoint what he is missing (if needed) and how he can improve, and just be a casual funny mentor.
+    12. (IMPORTANT) Keep the language easy to read, simple good wording but not too simple to look like some 5 years old wrote.
+    13. Try to be unique for each user.
 
-      Dont always start from "So, you won't BELIEVE (especially this word in CAPITAL ones) who I stumbled upon on GitHub", try different wording.  
+    Dont always start from "So, you won't BELIEVE (especially this word in CAPITAL ones) who I stumbled upon on GitHub", try different wording.  
 
-      Make it feel like a story that's fun to read while being insightful and encouraging.
-    `;
+    Make it feel like a story that's fun to read while being insightful and encouraging.
+  ;`
 
     const result = await model.generateContent(prompt);
     const analysis = result.response.text();
 
     return {
-      profile: typedProfile,
+      profile,
       analysis,
-      stats
+      stats,
     };
   } catch (error: any) {
     console.error('Error:', error);
     throw createError({
       statusCode: error.status || 500,
-      message: error.message || 'An error occurred'
+      message: error.message || 'An unexpected error occurred while fetching GitHub data.',
     });
   }
 });
