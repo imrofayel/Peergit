@@ -51,7 +51,7 @@
               <div class="text-3xl font-bold text-blue-500">{{ userData.stats.totalStars }}</div>
               <div class="text-base font-medium">Total Stars</div>
             </div>
-            <div class="p-4 bg-green-50/50 rounded-lg text-center border border-green-100">
+            <div class="p-4 bg-green-50/50 rounded-lg text-center border border-blue-100">
               <div class="text-3xl font-bold text-green-500">{{ userData.stats.totalForks }}</div>
               <div class="text-base font-medium">Total Forks</div>
             </div>
@@ -75,13 +75,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watchEffect } from 'vue';
+import { ref } from 'vue';
 
 const username = ref('');
 const loading = ref(false);
 const error = ref('');
-const analysis = ref(localStorage.getItem('analysis') || '');
-const userData = ref<any>(JSON.parse(localStorage.getItem('userData') || 'null'));
+const analysis = ref('');
+const userData = ref<any>(null);
 
 async function analyzeProfile() {
   if (!username.value.trim()) {
@@ -91,6 +91,8 @@ async function analyzeProfile() {
 
   loading.value = true;
   error.value = '';
+  analysis.value = '';
+  userData.value = null;
 
   try {
     const response = await $fetch(`/api/analyze?username=${encodeURIComponent(username.value)}`);
@@ -101,18 +103,11 @@ async function analyzeProfile() {
     };
     analysis.value = response.analysis;
 
-    // Save data to localStorage to persist on refresh
-    localStorage.setItem('userData', JSON.stringify(userData.value));
-    localStorage.setItem('analysis', analysis.value);
   } catch (e: any) {
     error.value = e.data?.message || 'An error occurred while analyzing the profile';
   } finally {
     loading.value = false;
   }
 }
-
-// Clear input and reload data on refresh
-watchEffect(() => {
-  username.value = '';
-});
 </script>
+
