@@ -191,6 +191,7 @@ export default defineEventHandler(async (event) => {
       11. Also pinpoint what he is missing (if needed) and how he can improve, and just be a casual funny mentor.
       12. (IMPORTANT) Keep the language easy to read, simple good wording but not too simple to look like some 5 years old wrote.
       13. Try to be unique for each user.
+      14. Among top-languages only count the major ones like used while coding not the extra ones like CMake and other languages like this which come with frameworks.
 
       Dont always start from "So, you won't BELIEVE (especially this word in CAPITAL ones) who I stumbled upon on GitHub", try different wording.
     `;

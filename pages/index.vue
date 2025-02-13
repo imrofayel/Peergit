@@ -106,7 +106,6 @@ async function analyzeProfile() {
   shareLink.value = '';
 
   try {
-    // Get the analysis response from your API endpoint (which now also saves to Supabase)
     const response = await $fetch(`/api/analyze?username=${encodeURIComponent(username.value)}`);
 
     userData.value = {
