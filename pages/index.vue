@@ -114,8 +114,8 @@ async function analyzeProfile() {
     };
     analysis.value = response.analysis;
 
-    // Use the ID from the response directly for sharing
-    shareLink.value = `${window.location.origin}/analysis/${response.id}`;
+    // Use username for sharing instead of ID
+    shareLink.value = `${window.location.origin}/analysis/${response.github_username}`;
   } catch (e: any) {
     error.value = e.data?.message || 'An error occurred while analyzing the profile';
   } finally {

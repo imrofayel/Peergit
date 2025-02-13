@@ -43,8 +43,15 @@
 <script lang="ts" setup>
 const route = useRoute();
 
-// Fetch data using built-in composable
-const { data, pending, error } = await useFetch(`/api/analysis/${route.params.id}`);
+// Add error handling to the fetch call
+const { data, pending, error } = await useFetch(`/api/analysis/user/${route.params.username}`, {
+  onRequestError: ({ error }) => {
+    console.error('Request error:', error)
+  },
+  onResponseError: ({ response }) => {
+    console.error('Response error:', response)
+  }
+});
 
 // Set page metadata
 useHead({
@@ -59,7 +66,3 @@ useHead({
   ]
 });
 </script>
-
-<style>
-
-</style>
