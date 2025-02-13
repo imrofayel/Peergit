@@ -89,7 +89,7 @@ if (error.value) {
 
 // Set page metadata
 useHead({
-  title: data.value ? `${data.value.profile.name} | Peergit` : 'Loading Analysis | PeerGit',
+  title: data.value ? `${data.value.profile.name || data.value.profile.login } | Peergit` : 'Loading Analysis | PeerGit',
   meta: [
     {
       name: 'description',
