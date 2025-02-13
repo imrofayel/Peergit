@@ -62,30 +62,36 @@
 
 <script lang="ts" setup>
 const route = useRoute();
+const normalizedUsername = computed(() => 
+  (route.params.username as string || '').trim().toLowerCase()
+);
 import VueQrcode from 'vue-qrcode';
-
 
 // Add error handling to the fetch call
 const router = useRouter();
-const { data, pending, error } = await useFetch(`/api/analysis/user/${route.params.username}`, {
-  onRequestError: ({ error }) => {
-    console.error('Request error:', error)
-  },
-  onResponseError: ({ response }) => {
-    if (response.status === 404) {
-      router.push('/');
+const { data, pending, error } = await useFetch(
+  () => `/api/analysis/user/${normalizedUsername.value}`,
+  {
+    onResponseError: ({ response }) => {
+      const error = response._data;
+      if (error?.data?.redirect) {
+        navigateTo(`/?username=${error.data.username}&autoAnalyze=true`);
+      } else if (response.status === 404) {
+        navigateTo('/');
+      }
     }
-    console.error('Response error:', response)
+  }
+);
+
+// Handle errors
+watchEffect(() => {
+  if (error.value) {
+    console.error('Analysis error:', error.value);
+    if (error.value?.data?.redirect) {
+      navigateTo(`/?username=${error.value.data.username}&autoAnalyze=true`);
+    }
   }
 });
-
-// Handle composable error
-if (error.value) {
-  console.error('Composable error:', error.value);
-  if (error.value?.statusCode === 404) {
-    router.push('/');
-  }
-}
 
 // Set page metadata
 useHead({

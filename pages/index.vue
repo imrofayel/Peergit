@@ -107,6 +107,7 @@ async function analyzeProfile() {
     return;
   }
 
+  const normalizedUsername = username.value.trim().toLowerCase();
   loading.value = true;
   error.value = '';
   analysis.value = '';
@@ -114,18 +115,20 @@ async function analyzeProfile() {
   shareLink.value = '';
 
   try {
-    const response = await $fetch(`/api/analyze?username=${encodeURIComponent(username.value)}`);
-
+    const response = await $fetch(`/api/analyze?username=${encodeURIComponent(normalizedUsername)}`);
+    
     userData.value = {
       profile: response.profile,
       stats: response.stats
     };
     analysis.value = response.analysis;
-
-    // Use username for sharing instead of ID
-    shareLink.value = `${window.location.origin}/${response.github_username}`;
+    shareLink.value = `${window.location.origin}/${normalizedUsername}`;
   } catch (e: any) {
-    error.value = e.data?.message || 'An error occurred while analyzing the profile';
+    console.error('Analysis error:', e);
+    error.value = e.data?.message || 'Failed to analyze profile';
+    if (e.data?.redirect) {
+      navigateTo(`/?username=${e.data.username}&autoAnalyze=true`);
+    }
   } finally {
     loading.value = false;
   }
@@ -135,7 +138,7 @@ async function analyzeProfile() {
 const route = useRoute();
 onMounted(() => {
   if (route.query.username && route.query.autoAnalyze === 'true') {
-    username.value = route.query.username as string;
+    username.value = (route.query.username as string).trim().toLowerCase();
     analyzeProfile();
   }
 });
