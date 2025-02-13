@@ -131,7 +131,7 @@ export default defineEventHandler(async (event) => {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt =` 
-    Write a fun, engaging, and slightly playful analysis of this GitHub user's profile in a novel-like narrative style. 
+    Write a fun (like slowly, casually telling a story with laughs and good things), engaging, and slightly playful analysis of this GitHub user's profile in a novel-like narrative style. 
     Include some light-hearted observations and friendly roasting where appropriate (but must do). Make it feel like a friend telling 
     another friend about someone interesting they discovered.
 

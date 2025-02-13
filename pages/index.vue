@@ -47,20 +47,20 @@
 
           <!-- Quick Stats -->
           <div v-if="userData?.stats" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="p-4 bg-blue-50/50 rounded-lg text-center border border-blue-100">
-              <div class="text-3xl font-bold text-blue-500">{{ userData.stats.totalStars }}</div>
+            <div class="p-3 rounded-xl text-center backdrop-blur-2xl border border-neutral-200 bg-white hover:bg-neutral-50 shadow-xs">
+              <div class="text-3xl font-semibold">{{ userData.stats.totalStars }}</div>
               <div class="text-base font-medium">Total Stars</div>
             </div>
-            <div class="p-4 bg-green-50/50 rounded-lg text-center border border-blue-100">
-              <div class="text-3xl font-bold text-green-500">{{ userData.stats.totalForks }}</div>
+            <div class="p-3 rounded-xl text-center backdrop-blur-2xl border border-neutral-200 bg-white hover:bg-neutral-50 shadow-xs">
+              <div class="text-3xl font-semibold">{{ userData.stats.totalForks }}</div>
               <div class="text-base font-medium">Total Forks</div>
             </div>
-            <div class="p-4 bg-indigo-50/50 rounded-lg text-center border-indigo-100 border">
-              <div class="text-3xl font-bold text-indigo-500">{{ userData.profile.public_repos }}</div>
+            <div class="p-3 rounded-xl text-center backdrop-blur-2xl border border-neutral-200 bg-white hover:bg-neutral-50 shadow-xs">
+              <div class="text-3xl font-semibold">{{ userData.profile.public_repos }}</div>
               <div class="text-base font-medium">Repositories</div>
             </div>
-            <div class="p-4 bg-pink-50/50 rounded-lg text-center border-red-100 border">
-              <div class="text-3xl font-bold text-red-500">{{ userData.profile.followers }}</div>
+            <div class="p-3 rounded-xl text-center backdrop-blur-2xl border border-neutral-200 bg-white hover:bg-neutral-50 shadow-xs">
+              <div class="text-3xl font-semibold">{{ userData.profile.followers }}</div>
               <div class="text-base font-medium">Followers</div>
             </div>
           </div>
