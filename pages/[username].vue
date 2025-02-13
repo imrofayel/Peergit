@@ -18,7 +18,7 @@
             class="w-20 h-20 rounded-full"
           />
           <div>
-            <h2 class="text-2xl font-semibold">
+            <h2 class="text-2xl font-medium">
               {{ data.profile.name || data.profile.login }}
             </h2>
             <p class="text-lg">{{ data.profile.bio || 'No bio provided' }}</p>
