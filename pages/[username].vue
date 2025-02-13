@@ -31,6 +31,30 @@
             {{ data.analysis }}
           </div>
         </div>
+
+                <!-- Shareable Link -->
+                <div class="mt-4 text-lg flex flex-col gap-y-1">
+          <span class="drop-shadow-xs">Share with your friends or view again. Scan the QR code or click on it.</span>
+
+          <NuxtLink :to="`https://peergit.vercel.app/${data.profile.login}`" target="_blank"><figure class="qrcode relative w-48 right-4">
+            <vue-qrcode 
+              :value="`https://peergit.vercel.app/${data.profile.login}`"
+              :scale="12"
+              type="image/png"
+              :color="{ dark: '#000000', light: '#ffffff' }"
+              :options="{
+              errorCorrectionLevel: 'H',
+              width: 150,
+              margin: 0
+              }"
+            />
+            <img
+              :src="data.profile.avatar_url"
+              :alt="data.profile.login"
+              class="absolute w-13 h-13 drop-shadow-sm rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            />
+            </figure></NuxtLink>
+        </div>
       </div>
     </div>
   </div>
@@ -38,6 +62,8 @@
 
 <script lang="ts" setup>
 const route = useRoute();
+import VueQrcode from 'vue-qrcode';
+
 
 // Add error handling to the fetch call
 const router = useRouter();
