@@ -31,9 +31,9 @@
       </div>
 
       <!-- Results -->
-      <div v-if="analysis" class="flex flex-col gap-y-8 m-6" id="analysisContainer">
+      <div v-if="analysis" class="flex flex-col gap-y-4 m-6" id="analysisContainer">
         <!-- Profile Info -->
-        <div v-if="userData" class="flex items-center justify-center gap-4 p-4 rounded-lg">
+        <div v-if="userData" class="flex items-center gap-4 p-4 rounded-lg">
           <img
             :src="userData.profile.avatar_url"
             :alt="userData.profile.login"
@@ -47,26 +47,6 @@
           </div>
         </div>
 
-        <!-- Quick Stats -->
-        <div v-if="userData?.stats" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="p-3 rounded-xl text-center backdrop-blur-2xl border border-neutral-200 bg-white hover:bg-neutral-50 shadow-xs">
-            <div class="text-3xl font-semibold">{{ userData.stats.totalStars }}</div>
-            <div class="text-base font-medium">Total Stars</div>
-          </div>
-          <div class="p-3 rounded-xl text-center backdrop-blur-2xl border border-neutral-200 bg-white hover:bg-neutral-50 shadow-xs">
-            <div class="text-3xl font-semibold">{{ userData.stats.totalForks }}</div>
-            <div class="text-base font-medium">Total Forks</div>
-          </div>
-          <div class="p-3 rounded-xl text-center backdrop-blur-2xl border border-neutral-200 bg-white hover:bg-neutral-50 shadow-xs">
-            <div class="text-3xl font-semibold">{{ userData.profile.public_repos }}</div>
-            <div class="text-base font-medium">Repositories</div>
-          </div>
-          <div class="p-3 rounded-xl text-center backdrop-blur-2xl border border-neutral-200 bg-white hover:bg-neutral-50 shadow-xs">
-            <div class="text-3xl font-semibold">{{ userData.profile.followers }}</div>
-            <div class="text-base font-medium">Followers</div>
-          </div>
-        </div>
-
         <!-- AI Analysis -->
         <div class="prose prose-lg max-w-none">
           <div class="flex flex-col drop-shadow-xs leading-relaxed text-lg gap-y-4">
@@ -75,9 +55,27 @@
         </div>
 
         <!-- Shareable Link -->
-        <div v-if="shareLink" class="mt-4 p-4 border rounded-xl bg-white text-center">
-          Share this link to view your analysis again:<br />
-          <a :href="shareLink" class="text-blue-500 underline">{{ shareLink }}</a>
+        <div v-if="shareLink" class="mt-4 text-lg flex flex-col gap-y-1">
+          <span class="drop-shadow-xs">Share with your friends or view again. Scan the QR code or click on it.</span>
+
+          <NuxtLink :to="shareLink" target="_blank"><figure class="qrcode relative w-48 right-4">
+            <vue-qrcode 
+              :value="shareLink" 
+              :scale="12"
+              type="image/png"
+              :color="{ dark: '#000000', light: '#ffffff' }"
+              :options="{
+              errorCorrectionLevel: 'H',
+              width: 150,
+              margin: 0
+              }"
+            />
+            <img
+              :src="userData.profile.avatar_url"
+              :alt="userData.profile.login"
+              class="absolute w-14 h-14 drop-shadow-sm rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            />
+            </figure></NuxtLink>
         </div>
       </div>
     </div>
@@ -86,6 +84,7 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
+import VueQrcode from 'vue-qrcode';
 
 const username = ref('');
 const loading = ref(false);
