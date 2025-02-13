@@ -18,7 +18,7 @@
               </div>
           </div>
           <div><button @click="analyzeProfile" :disabled="loading"
-              class="border border-gray-200 justify-center shrink-0 flex items-center font-semibold transition-all ease-in duration-75 whitespace-nowrap text-center select-none disabled:cursor-not-allowed gap-x-1 active:shadow-none rounded-3xl py-1.5 cursor-pointer h-10 w-10 drop-shadow-xs shadow-xs"
+              class="border border-gray-200 justify-center shrink-0 flex items-center font-semibold transition-all ease-in duration-75 whitespace-nowrap text-center select-none disabled:cursor-not-allowed gap-x-1 active:shadow-none rounded-3xl py-1.5 cursor-pointer h-10 w-10 drop-shadow-xs  bg-white"
               aria-label="Submit"><svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" v-if="!loading"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 12h14m-7-7l7 7l-7 7"/></svg>
             
               <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" v-if="loading">
