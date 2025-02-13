@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://peergit.vercel.app/sitemap.xml

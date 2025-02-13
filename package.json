@@ -12,6 +12,8 @@
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "@nuxt/icon": "1.10.3",
+    "@nuxtjs/robots": "^5.2.2",
+    "@nuxtjs/sitemap": "^7.2.4",
     "@supabase/supabase-js": "^2.48.1",
     "@tailwindcss/vite": "^4.0.3",
     "@vercel/analytics": "^1.5.0",
