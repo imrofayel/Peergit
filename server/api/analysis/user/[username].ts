@@ -38,25 +38,20 @@ export default defineEventHandler(async (event) => {
       return existingAnalysis;
     }
 
-    console.log('No existing analysis found, triggering new analysis');
-
-    // If no analysis exists, trigger a new one
-    try {
-      const response = await $fetch(`/api/analyze?username=${encodeURIComponent(username)}`);
-      console.log('New analysis generated successfully');
-      return response;
-    } catch (e: any) {
-      console.error('Error generating new analysis:', e);
-      throw createError({
-        statusCode: 404,
-        message: e.message || 'Unable to analyze GitHub profile',
-      });
-    }
-  } catch (error: any) {
-    console.error('Unexpected error:', error);
+    // Simplified error throwing
     throw createError({
-      statusCode: error.status || 500,
-      message: error.message || 'An unexpected error occurred',
+      statusCode: 404,
+      statusMessage: 'Analysis not found',
+      data: { redirect: true, username }
+    });
+
+  } catch (error: any) {
+    console.error('Error:', error);
+    // Ensure we preserve the status code and message
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || 'An unexpected error occurred',
+      data: error.data
     });
   }
 });

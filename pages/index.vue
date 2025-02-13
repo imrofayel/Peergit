@@ -23,6 +23,7 @@
 
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" v-if="loading"><g stroke="currentColor"><circle cx="12" cy="12" r="9.5" fill="none" stroke-linecap="round" stroke-width="2.5"><animate attributeName="stroke-dasharray" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0 150;42 150;42 150;42 150"/><animate attributeName="stroke-dashoffset" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0;-16;-59;-59"/></circle><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></g></svg>
 
+
       </div>
 
       <!-- Error Message -->
@@ -83,8 +84,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import VueQrcode from 'vue-qrcode';
+import { useRoute } from 'vue-router';
 
 const username = ref('');
 const loading = ref(false);
@@ -115,12 +117,21 @@ async function analyzeProfile() {
     analysis.value = response.analysis;
 
     // Use username for sharing instead of ID
-    shareLink.value = `${window.location.origin}/analysis/${response.github_username}`;
+    shareLink.value = `${window.location.origin}/${response.github_username}`;
   } catch (e: any) {
     error.value = e.data?.message || 'An error occurred while analyzing the profile';
   } finally {
     loading.value = false;
   }
 }
+
+// Handle auto-analyze from URL params
+const route = useRoute();
+onMounted(() => {
+  if (route.query.username && route.query.autoAnalyze === 'true') {
+    username.value = route.query.username as string;
+    analyzeProfile();
+  }
+});
 
 </script>
