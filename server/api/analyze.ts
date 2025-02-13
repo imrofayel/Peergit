@@ -1,5 +1,7 @@
 import { Octokit } from 'octokit';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getQuery } from 'h3';
+import { createClient } from '@supabase/supabase-js';
 
 interface GithubRepo {
   name: string;
@@ -35,6 +37,29 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Initialize Supabase client using your runtime config.
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!
+  );
+
+  // Check if analysis for this GitHub username already exists.
+  const { data: existingAnalysis, error: selectError } = await supabase
+    .from('analysis_results')
+    .select('*')
+    .eq('github_username', username)
+    .maybeSingle();
+
+  if (selectError) {
+    console.error('Error checking for existing analysis:', selectError);
+  }
+  
+  if (existingAnalysis) {
+    console.log('Returning cached analysis from Supabase.');
+    return existingAnalysis;
+  }
+
+  // Initialize Octokit & Google Generative AI using tokens from runtime config.
   const octokit = new Octokit({
     auth: config.public.githubToken,
   });
@@ -42,24 +67,23 @@ export default defineEventHandler(async (event) => {
   const genAI = new GoogleGenerativeAI(config.public.geminiApiKey);
 
   try {
-    // Fetch user profile
+    // Fetch GitHub user profile.
     const profileResponse = await octokit.rest.users.getByUsername({ username }).catch(() => null);
     if (!profileResponse) {
       throw createError({ statusCode: 404, message: 'GitHub user not found' });
     }
     const profile = profileResponse.data as GithubProfile;
 
-    // Fetch repositories
+    // Fetch repositories.
     const reposResponse = await octokit.rest.repos.listForUser({
       username,
       sort: 'updated',
       per_page: 100,
       type: 'owner',
     }).catch(() => ({ data: [] }));
-
     const repos = reposResponse.data as GithubRepo[];
 
-    // Attempt to fetch README (Handle if not found)
+    // Attempt to fetch the user's README (if available).
     let userReadme = 'No README provided';
     try {
       const readmeResponse = await octokit.rest.repos.getReadme({
@@ -71,7 +95,7 @@ export default defineEventHandler(async (event) => {
       console.warn('README not found, continuing without it.');
     }
 
-    // Fetch repo languages safely
+    // Fetch languages for each repo safely.
     const repoLanguages = await Promise.all(
       repos.map(async (repo) => {
         try {
@@ -86,7 +110,7 @@ export default defineEventHandler(async (event) => {
       })
     );
 
-    // Calculate total stats
+    // Calculate overall stats.
     const stats = {
       totalStars: repos.reduce((sum, repo) => sum + (repo.stargazers_count || 0), 0),
       totalForks: repos.reduce((sum, repo) => sum + (repo.forks_count || 0), 0),
@@ -108,13 +132,13 @@ export default defineEventHandler(async (event) => {
       , repos[0]) : null
     };
 
-    // Sort top languages
+    // Sort and pick top languages.
     const topLanguages = Object.entries(stats.languages)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([lang]) => lang);
 
-    // Handle cases where repos are empty
+    // Format repository information.
     const mostStarredRepoInfo = stats.mostStarredRepo
       ? `${stats.mostStarredRepo.name} (${stats.mostStarredRepo.stargazers_count} stars)`
       : 'No repositories found';
@@ -127,61 +151,70 @@ export default defineEventHandler(async (event) => {
       ? `${stats.newestRepo.name} (${new Date(stats.newestRepo.created_at).toLocaleDateString()})`
       : 'No repositories found';
 
-    // Prepare AI model prompt
+    // Prepare prompt for the AI model.
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const prompt = `
+      Write a fun (like slowly, casually telling a story with laughs and good things), engaging, and slightly playful analysis of this GitHub user's profile in a novel-like narrative style. 
+      Include some light-hearted observations and friendly roasting where appropriate (but must do). Make it feel like a friend telling 
+      another friend about someone interesting they discovered.
 
-    const prompt =` 
-    Write a fun (like slowly, casually telling a story with laughs and good things), engaging, and slightly playful analysis of this GitHub user's profile in a novel-like narrative style. 
-    Include some light-hearted observations and friendly roasting where appropriate (but must do). Make it feel like a friend telling 
-    another friend about someone interesting they discovered.
+      Here's the user's data (but don't list these facts directly, weave them naturally into the story):
 
-    Here's the user's data (but don't list these facts directly, weave them naturally into the story):
-
-    Profile:
-      - Name: ${profile.name || profile.login}
-      - Bio: ${profile.bio || 'No bio provided'}
-      - User Readme: ${userReadme}
-      - Public Repos: ${profile.public_repos}
-      - Followers: ${profile.followers}
-      - Following: ${profile.following}
-      - Account created: ${new Date(profile.created_at).toLocaleDateString()}
+      Profile:
+        - Name: ${profile.name || profile.login}
+        - Bio: ${profile.bio || 'No bio provided'}
+        - User Readme: ${userReadme}
+        - Public Repos: ${profile.public_repos}
+        - Followers: ${profile.followers}
+        - Following: ${profile.following}
+        - Account created: ${new Date(profile.created_at).toLocaleDateString()}
 
       Stats:
-      - Total Stars: ${stats.totalStars}
-      - Total Forks: ${stats.totalForks}
-      - Top Languages: ${topLanguages.join(', ') || 'No major languages detected'}
-      - Most Starred Repo: ${mostStarredRepoInfo}
-      - First Repo: ${oldestRepoInfo}
-      - Latest Repo: ${newestRepoInfo}
+        - Total Stars: ${stats.totalStars}
+        - Total Forks: ${stats.totalForks}
+        - Top Languages: ${topLanguages.join(', ') || 'No major languages detected'}
+        - Most Starred Repo: ${mostStarredRepoInfo}
+        - First Repo: ${oldestRepoInfo}
+        - Latest Repo: ${newestRepoInfo}
 
-    Guidelines for the narrative:
-    1. Start with an engaging hook about their coding journey
-    2. Weave in observations about their evolution as a developer
-    3. Make educated guesses about their personality and working style based on their repos and activity
-    4. Include some playful observations about their language preferences and coding patterns
-    5. Suggest potential future directions or hidden talents you spot.
-    6. End with an encouraging and friendly note
-    7. Keep the tone casual and fun, like a friend telling a story
-    8. Feel free to make reasonable assumptions about their coding journey and interests
-    9. (IMPORTANT) Include some light-hearted jokes or observations where appropriate. (must after every two lines like often crack really good jokes throughout the story please please).
-    10. Write in paragraphs, not bullet points or markdown
-    11. Also pinpoint what he is missing (if needed) and how he can improve, and just be a casual funny mentor.
-    12. (IMPORTANT) Keep the language easy to read, simple good wording but not too simple to look like some 5 years old wrote.
-    13. Try to be unique for each user.
+      Guidelines for the narrative:
+      1. Start with an engaging hook about their coding journey
+      2. Weave in observations about their evolution as a developer
+      3. Make educated guesses about their personality and working style based on their repos and activity
+      4. Include some playful observations about their language preferences and coding patterns
+      5. Suggest potential future directions or hidden talents you spot.
+      6. End with an encouraging and friendly note
+      7. Keep the tone casual and fun, like a friend telling a story
+      8. Feel free to make reasonable assumptions about their coding journey and interests
+      9. (IMPORTANT) Include some light-hearted jokes or observations where appropriate. (must after every two lines like often crack really good jokes throughout the story please please).
+      10. Write in paragraphs, not bullet points or markdown
+      11. Also pinpoint what he is missing (if needed) and how he can improve, and just be a casual funny mentor.
+      12. (IMPORTANT) Keep the language easy to read, simple good wording but not too simple to look like some 5 years old wrote.
+      13. Try to be unique for each user.
 
-    Dont always start from "So, you won't BELIEVE (especially this word in CAPITAL ones) who I stumbled upon on GitHub", try different wording.  
-
-    Make it feel like a story that's fun to read while being insightful and encouraging.
-  ;`
+      Dont always start from "So, you won't BELIEVE (especially this word in CAPITAL ones) who I stumbled upon on GitHub", try different wording.
+    `;
 
     const result = await model.generateContent(prompt);
-    const analysis = result.response.text();
+    const analysisText = result.response.text();
 
-    return {
+    // Save the new analysis to Supabase.
+    const { data: savedAnalysis, error: insertError } = await supabase
+    .from('analysis_results')
+    .insert([{
+      github_username: username,
       profile,
-      analysis,
       stats,
-    };
+      analysis: analysisText,
+    }])
+    .select()
+    .single();
+
+    if (insertError) {
+      throw createError({ statusCode: 500, message: insertError.message });
+    }
+
+    return savedAnalysis;
   } catch (error: any) {
     console.error('Error:', error);
     throw createError({

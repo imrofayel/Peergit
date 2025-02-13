@@ -12,6 +12,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "@nuxt/icon": "1.10.3",
+    "@supabase/supabase-js": "^2.48.1",
     "@tailwindcss/vite": "^4.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
