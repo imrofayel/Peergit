@@ -203,7 +203,7 @@ export default defineEventHandler(async (event) => {
     const { data: savedAnalysis, error: insertError } = await supabase
     .from('analysis_results')
     .insert([{
-      github_username: username,
+      github_username: username.toLowerCase(),
       profile,
       stats,
       analysis: analysisText,
