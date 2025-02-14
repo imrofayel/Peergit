@@ -5,7 +5,7 @@
     <div>
       <div class="flex gap-3 justify-center mt-3 items-center">
         <div
-          class="max-w-[380px] w-full pl-3 p-2 flex items-center gap-x-2 justify-between rounded-3xl border border-gray-200/80 transition-all duration-300 shadow-xs drop-shadow-xs">
+          class="max-w-[380px] w-full pl-3 p-2 flex items-center gap-x-2 justify-between rounded-3xl border border-gray-200/80 transition-all bg-white duration-300 shadow-xs drop-shadow-xs">
           <div class="flex items-center gap-x-2">
             <div><svg xmlns="http://www.w3.org/2000/svg" width="28" viewBox="0 0 24 24">
                 <path fill="currentColor"
