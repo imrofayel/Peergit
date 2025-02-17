@@ -1,75 +1,35 @@
-# Nuxt Minimal Starter
+# $Peergit$
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+> [!TIP]
+> Get a Fun, Honest Take on Your GitHub Profile!.
 
-## Setup
+Peergit gives you a fun, engaging impression of your GitHub profile—like a friend casually telling you what they think about your coding journey. Expect insights, laughs, and maybe a little friendly roasting!
 
-Make sure to install dependencies:
+> [!NOTE]
+> To make a local copy of this project, follow these instructions.
 
-```bash
-# npm
-npm install
+1. Clone the project and run `bun install`.
+2. Create a project in Supabase, and run the following SQL query to create `analysis_results` table.
 
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
+```sql
+create table public.analysis_results (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  github_username text not null,
+  created_at timestamp with time zone null default timezone ('utc'::text, now()),
+  profile jsonb null,
+  stats jsonb null,
+  analysis text null,
+  constraint analysis_results_pkey primary key (id),
+  constraint analysis_results_github_username_key unique (github_username)
+) TABLESPACE pg_default;
 ```
 
-## Development Server
+3. Get your Gemini API from [Google AI Studio](https://aistudio.google.com/apikey).
+4. Generate a [GitHub Personal Access Token (Classic)](https://github.com/settings/tokens) with `public_repo`, `read:user`, `repo:status` scope.
+5. Configure Environment Variables needed like Supabase credentials, Gemini API and GitHub token — check `.env.example`.
+6. Run `bun run dev`.
 
-Start the development server on `http://localhost:3000`:
+You have $Peergit$ at home now. This project can be deployed to various platforms like Vercel or Netlify. 🤍
 
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+> [!WARNING]
+> This project is intended for educational and personal use only. Please do not use it to create a copycat service. If you'd like to contribute or extend it, feel free to fork the repository and give proper credit.
