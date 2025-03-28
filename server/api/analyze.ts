@@ -152,7 +152,7 @@ export default defineEventHandler(async (event) => {
       : 'No repositories found';
 
     // Prepare prompt for the AI model.
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const prompt = `
       Write a fun (like slowly, casually telling a story with laughs and good things), engaging, and slightly playful analysis of this GitHub user's profile in a novel-like narrative style. 
       Include some light-hearted observations and friendly roasting where appropriate (but must do). Make it feel like a friend telling 
