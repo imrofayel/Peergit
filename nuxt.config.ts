@@ -7,7 +7,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       geminiApiKey: process.env.GEMINI_API_KEY,
-      githubToken: process.env.GITHUB_TOKEN
+      githubToken: process.env.GITHUB_TOKEN,
+      geminiModel: process.env.GEMINI_MODEL
     }
   },
   vite: {
